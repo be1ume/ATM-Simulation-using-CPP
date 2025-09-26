@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <fstream>
 #include <filesystem> // for checking if file exists in the usb
+#include <time.h>
 #define MAX 5
 
 using namespace std;
@@ -17,7 +18,7 @@ struct AccountInfo {
     string name;
     Date birthDate;
     int contactNumber;
-    double intialDeposit;
+    double balance;
     int pin;
 };
 
@@ -31,9 +32,10 @@ struct CardInfo {
     int pin;
 };
 
-class RegistrationModule {
+class ATM {
     private:
         List L;
+        CardInfo card;
         bool isEmpty();
         bool isFull();
         bool isDuplicate(int accountNumber);
@@ -46,22 +48,16 @@ class RegistrationModule {
         void save();
         void saveToUsb();
         void retrieve();
-};
-
-class TransactionModule {
-    private:
-        RegistrationModule RM;
-        CardInfo card;
-    public:
         void retrieveFromUsb();
         bool authenticate();
         void balanceInquiry();
         void deposit();
         void withdraw();
         void transfer();
-        void fundTransfer();
         void changePin();
+        //void other();
 };
+
 
 int menu(){
     int choice;
@@ -87,39 +83,39 @@ int transactionMenu(){
 }
 
 int main() {
-    RegistrationModule regMod;
-    TransactionModule tranMod;
-    regMod.init();
-    regMod.retrieve();
-    tranMod.retrieveFromUsb();
+    ATM atm;
+    atm.init();
+    atm.retrieve();
+    atm.retrieveFromUsb();
     while (true) {
-        if(!regMod.checkUsbDrive()){
+        if(!atm.checkUsbDrive()){
             cout<<"No USB drive detected. Please insert a USB drive."<<endl;
             system("pause");
             continue;
         } else {
             switch (menu()){
                 case 1:
-                    regMod.registerAccount();
+                    atm.registerAccount();
                     break;
                 case 2: 
-                    if(tranMod.authenticate()){
+                    atm.retrieveFromUsb();
+                    if(atm.authenticate()){
                         while(true){
                             switch(transactionMenu()){
                                 case 1:
-                                    tranMod.balanceInquiry();
+                                    atm.balanceInquiry();
                                     break;
                                 case 2:
-                                    tranMod.deposit();
+                                    atm.deposit();
                                     break;
                                 case 3:
-                                    tranMod.withdraw();
+                                    atm.withdraw();
                                     break;
                                 case 4:
-                                    tranMod.fundTransfer();
+                                    atm.transfer();
                                     break;
                                 case 5:
-                                    tranMod.changePin();
+                                    atm.changePin();
                                     break;
                                 case 6:
                                     cout << "Logging out..." << endl;
@@ -130,6 +126,9 @@ int main() {
                                     system("pause");
                             }
                         }
+                    } else {
+                        cout << "Authentication failed. Returning to main menu." << endl;
+                        system("pause");
                     }
                 case 3:
                     cout << "Exiting program." << endl;
@@ -141,24 +140,22 @@ int main() {
             }
         }
     }
-    regMod.registerAccount();
-    regMod.saveToUsb();
     return 0;
 };
 
-void RegistrationModule::init() {
+void ATM::init() {
     L.last = -1;
 }
 
-bool RegistrationModule::isEmpty() {
+bool ATM::isEmpty() {
     return (L.last == -1);
 }
 
-bool RegistrationModule::isFull() {
+bool ATM::isFull() {
     return (L.last == MAX - 1);
 }
 
-int RegistrationModule::locate(int accountNumber) {
+int ATM::locate(int accountNumber) {
     for (int i = 0; i <= L.last; i++) {
         if (L.accounts[i].accountNumber == accountNumber) {
             return i;
@@ -167,11 +164,11 @@ int RegistrationModule::locate(int accountNumber) {
     return -1;
 }
 
-bool RegistrationModule::isDuplicate(int accountNumber) {
+bool ATM::isDuplicate(int accountNumber) {
     return (locate(accountNumber) != -1);
 }
 
-bool RegistrationModule::checkUsbDrive() {
+bool ATM::checkUsbDrive() {
     char drive = 'D';
     char rootPath[4] = " :\\";
     for (drive = 'C'; drive <= 'Z'; drive++) {
@@ -184,7 +181,7 @@ bool RegistrationModule::checkUsbDrive() {
     return false;
 }
 
-string RegistrationModule::getUsbPath() {
+string ATM::getUsbPath() {
     char drive = 'D';
     char rootPath[4] = " :\\";
     for (drive = 'C'; drive <= 'Z'; drive++) {
@@ -197,7 +194,7 @@ string RegistrationModule::getUsbPath() {
     return "";
 }
 
-void RegistrationModule::registerAccount() {
+void ATM::registerAccount() {
     AccountInfo newAcc;
     if (!checkUsbDrive()) {
         cout << "No USB drive detected." << endl;
@@ -209,8 +206,6 @@ void RegistrationModule::registerAccount() {
         system("pause");
         return;
     }
-    cout << "Enter Account Number: ";
-    cin >> newAcc.accountNumber;
 
     if (isDuplicate(newAcc.accountNumber)) {
         cout << "Account already exists." << endl;
@@ -220,18 +215,30 @@ void RegistrationModule::registerAccount() {
 
     cout << "Enter Name: ";
     cin.ignore(); getline(cin, newAcc.name);
+
+    srand(time(NULL));
+    newAcc.accountNumber = rand() % 99999 + 10000;
+    cout << "Generated Account Number: " << newAcc.accountNumber << endl;
+
     cout << "Enter Birth Date (DD MM YYYY): ";
     cin >> newAcc.birthDate.day >> newAcc.birthDate.month >> newAcc.birthDate.year;
     cout << "Enter Contact Number: ";
     cin >> newAcc.contactNumber;
     cout << "Enter Initial Deposit: ";
-    cin >> newAcc.intialDeposit;
+    cin >> newAcc.balance;
     cout << "Enter PIN: ";
     cin >> newAcc.pin;
 
     if (filesystem::exists(getUsbPath() + string("pin.code.txt"))) {
         cout << "Failed to register..." << endl;
         cout << "USB Card already registered..." << endl;
+        system("pause");
+        return;
+    }
+
+    if (newAcc.balance < 5000) {
+        cout << "Initial deposit must be at least 5000." << endl;
+        cout << "Failed to register..." << endl;
         system("pause");
         return;
     }
@@ -243,7 +250,7 @@ void RegistrationModule::registerAccount() {
     save();
 }
 
-void RegistrationModule::saveToUsb() {
+void ATM::saveToUsb() {
     ofstream fout(getUsbPath() + string("pin.code.txt"));
     if (!fout) {
         cout << "Error creating file on USB drive." << endl;
@@ -254,7 +261,7 @@ void RegistrationModule::saveToUsb() {
     fout.close();
 }
 
-void RegistrationModule::save() {
+void ATM::save() {
     ofstream fout("database.txt");
     if (!fout) {
         cout << "Error creating database file." << endl;
@@ -268,7 +275,7 @@ void RegistrationModule::save() {
              << L.accounts[i].birthDate.month << "/"
              << L.accounts[i].birthDate.year << "\t"
              << L.accounts[i].contactNumber << "\t"
-             << L.accounts[i].intialDeposit << "\t"
+             << L.accounts[i].balance<< "\t"
              << L.accounts[i].pin << endl;
     }
     cout << "Database saved successfully." << endl;
@@ -276,7 +283,7 @@ void RegistrationModule::save() {
     fout.close();
 }
 
-void RegistrationModule::retrieve() {
+void ATM::retrieve() {
     ifstream fin("database.txt");
     if (!fin) {
         cout << "Error opening database file." << endl;
@@ -288,14 +295,14 @@ void RegistrationModule::retrieve() {
         fin.ignore(); getline(fin, acc.name, '\t');
         char slash;
         fin >> acc.birthDate.day >> slash >> acc.birthDate.month >> slash >> acc.birthDate.year;
-        fin >> acc.contactNumber >> acc.intialDeposit >> acc.pin;
+        fin >> acc.contactNumber >> acc.balance>> acc.pin;
         L.accounts[++L.last] = acc;
     }
     fin.close();
 }
 
-void TransactionModule::retrieveFromUsb() {
-    ifstream fin(RM.getUsbPath() + string("pin.code.txt"));
+void ATM::retrieveFromUsb() {
+    ifstream fin(getUsbPath() + string("pin.code.txt"));
     if (!fin) {
         cout << "Error opening file on USB drive." << endl;
         system("pause");
@@ -306,19 +313,113 @@ void TransactionModule::retrieveFromUsb() {
     cout << "Retrieved from USB - Account Number: " << card.accountNumber << ", PIN: " << card.pin << endl;
 }
 
-bool TransactionModule::authenticate() {
+bool ATM::authenticate() {
     int attempts = 3;
-    int tempNum, tempPin;
+    int tempPin;
     for (int i=0; i<attempts; i++) {
-        cout << "Enter Account Number: ";
-        cin >> tempNum;
+        cout << "ACCOUTN NUM: "<< card.accountNumber << endl;
         cout << "Enter PIN: ";
         cin >> tempPin;
-        if (tempNum == card.accountNumber && tempPin == card.pin) {
+        if (tempPin == card.pin) {
             cout << "Authentication successful." << endl;
             return true;
         } else {
             cout << "Incorrect credentials. Try again." << endl;
         }
+    } return false;
+}
+
+void ATM::balanceInquiry() { 
+    int p = locate(card.accountNumber);
+    if (p != -1) {
+        cout << "Current Balance: " << L.accounts[p].balance << endl;
+        system("pause");
+    } else {
+        cout << "Account not found." << endl;
+        system("pause");
+    }
+}
+
+void ATM::deposit() {
+    int p = locate(card.accountNumber);
+    cout << "Enter amount to deposit: ";
+    double amount; cin >> amount;
+    if (p!= -1) {
+        L.accounts[p].balance += amount;
+        cout << "Deposit successful. New balance: " << L.accounts[p].balance << endl;
+        system("pause");
+    } else {
+        cout << "Error processing deposit." << endl;
+        system("pause");
+    }
+}
+
+void ATM::withdraw() {
+    int p = locate(card.accountNumber);
+    cout << "Enter amount to withdraw: ";
+    double amount; cin >> amount;
+    if (p!= -1){
+        if (amount < L.accounts[p].balance){
+            L.accounts[p].balance -= amount;
+            cout << "Withdrawal successful: "<< amount <<". New balance: " << L.accounts[p].balance << endl;
+            system("pause");
+        }
+        else {
+            cout << "Insufficient balance." << endl;
+            system("pause");
+        }
+    }
+}
+
+void ATM::transfer() {
+    int p = locate(card.accountNumber);
+    int target;
+    cout << "Enter target account number: ";
+    cin >> target;
+    int t = locate(target);
+    if (t == -1) {
+        cout << "Target account not found." << endl;
+        system("pause");
+        return;
+    } else if (t == p){
+        cout << "Cannot transfer to the same account." << endl;
+        system("pause");
+        return;
+        return;
+    } else {
+        cout << "Enter ammount to transfer: ";
+        double amount; cin >> amount;
+        if (amount < L.accounts[p].balance){
+            L.accounts[p].balance -= amount;
+            L.accounts[t].balance += amount;
+            cout << "Transfer successful: "<< amount <<". New balance: " << L.accounts[p].balance << endl;
+            system("pause");
+        } else {
+            cout << "Insufficient balance." << endl;
+            system("pause");
+        }
+    }
+}
+
+void ATM::changePin() {
+    int p = locate(card.accountNumber);
+    int newPin, oldPin, confirmPin;
+    cout << "Enter old PIN: ";
+    cin >> oldPin;
+    if (oldPin == L.accounts[p].pin) {
+        cout << "Enter new PIN: "; cin >> newPin;
+        cout << "Confirm new PIN: "; cin >> confirmPin;
+        if(newPin == confirmPin) {
+            L.accounts[p].pin = newPin;
+            card.pin = newPin;
+            saveToUsb();
+            save();
+        } else {
+            cout << "PINs do not match. Please try again." << endl;
+            system("pause");
+        }
+    } else {
+        cout << "Incorrect old PIN. Please try again." << endl;
+        system("pause");
     }
 }
