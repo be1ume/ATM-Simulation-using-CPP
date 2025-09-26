@@ -33,9 +33,16 @@
 *.lib
 
 # Executables
-*.exe
+#*.exe
 *.out
 *.app
 
 # debug information files
 *.dwo
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+
+*.txt
