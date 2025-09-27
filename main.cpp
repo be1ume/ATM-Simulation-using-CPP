@@ -3,6 +3,7 @@
 #include <fstream>
 #include <filesystem> // for checking if file exists in the usb
 #include <time.h>
+#include <conio.h>
 #define MAX 5
 
 using namespace std;
@@ -58,6 +59,10 @@ class ATM {
         //void other();
 };
 
+//UI animations;
+void printToxy(int x, int y, string text);
+void gotoxy(int x, int y);
+void mainMenu();
 
 int menu(){
     int choice;
@@ -68,6 +73,8 @@ int menu(){
     cin >> choice;
     return choice;
 }
+
+
 
 int transactionMenu(){
     int choice;
@@ -87,12 +94,80 @@ int main() {
     atm.init();
     atm.retrieve();
     atm.retrieveFromUsb();
-    while (true) {
+    int count = 0;
+    while (true) { //dito
         if(!atm.checkUsbDrive()){
-            cout<<"No USB drive detected. Please insert a USB drive."<<endl;
-            system("pause");
+            system("cls");
+            if(count == 0) {
+                count++;
+                // hindi ma run sa terminal sa vscode sa cmd ko nirurun
+
+                // g nga, makikita koba dito pag nirun mo?
+                // panong di ma recognize?
+                
+                // kita mo ba? open mo yung read only na terminal i full screen mo wait rurun ko
+            
+                // isa pa boss, register account m
+                // kita mo ba yung nasa terminal send kanga ss mag dedemo ako
+                // na open mo na sa full terminal? sa naka tab
+                // oo boss ala lumabas, isapa run
+                // tinging nga wait boss
+                
+
+            
+
+                printToxy(30, 5, "_________________________________________");
+                printToxy(30, 6, "|                                       |");
+                printToxy(30, 7, "|     I N S E R T   U S B   C A R D     |");
+                printToxy(30, 8, "|_______________________________________|");
+
+                printToxy(40, 12, "___________________");
+                printToxy(40, 13, "+    |            _|");
+                printToxy(40, 14, "|    |  A  T  M  |");
+                printToxy(40, 15, "|____|____________|");
+                printToxy(40, 16, "|  | __________ |");
+                printToxy(40, 17, "|  | |_U__S__B_| |");
+                printToxy(40, 18, "|\\_|____________|");
+                printToxy(40, 19, "|  |            \\");
+                printToxy(40, 20, "|  |             +");
+                printToxy(40, 21, "|  |             |");
+                printToxy(40, 22, "|  +             |");
+                printToxy(40, 23, "\\  |             |");
+                printToxy(40, 24, " \\_|____________ |");
+
+                cout<<"\n\n";
+                system("pause");
+            }
+            if (count != 0) {
+                count--;
+                printToxy(30, 5, "_________________________________________");
+                printToxy(30, 6, "|                                       |");
+                printToxy(30, 7, "|\033[31m     I N S E R T   U S B   C A R D     \033[0m|");
+                printToxy(30, 8, "|_______________________________________|");
+
+                printToxy(40, 12, "___________________");
+                printToxy(40, 13, "+    |            _|");
+                printToxy(40, 14, "|    |  A  T  M  |");
+                printToxy(40, 15, "|____|____________|");
+                printToxy(40, 16, "|  | __________ |");
+                printToxy(40, 17, "|  | |_U__S__B_| |");
+                printToxy(40, 18, "|\\_|____________|");
+                printToxy(40, 19, "|  |            \\");
+                printToxy(40, 20, "|  |             +");
+                printToxy(40, 21, "|  |             |");
+                printToxy(40, 22, "|  +             |");
+                printToxy(40, 23, "\\  |             |");
+                printToxy(40, 24, " \\_|____________ |");
+
+
+                cout<<"\n\n";
+                system("pause");
+            }
             continue;
         } else {
+            printToxy(30, 27, "[ DO NOT REMOVE USB DRIVE WhILE USING ATM ]");
+            system("pause");
+            system("cls");
             switch (menu()){
                 case 1:
                     atm.registerAccount();
@@ -100,7 +175,7 @@ int main() {
                 case 2: 
                     atm.retrieveFromUsb();
                     if(atm.authenticate()){
-                        while(true){
+                        while(true){ //medjo dito
                             switch(transactionMenu()){
                                 case 1:
                                     atm.balanceInquiry();
@@ -270,8 +345,8 @@ void ATM::save() {
     }
     for (int i = 0; i <= L.last; i++) {
         fout << L.accounts[i].accountNumber << "\t"
-             << L.accounts[i].name << "\t"
-             << L.accounts[i].birthDate.day << "/"
+            << L.accounts[i].name << "\t"
+            << L.accounts[i].birthDate.day << "/"
              << L.accounts[i].birthDate.month << "/"
              << L.accounts[i].birthDate.year << "\t"
              << L.accounts[i].contactNumber << "\t"
@@ -423,3 +498,44 @@ void ATM::changePin() {
         system("pause");
     }
 }
+
+// UI here
+void gotoxy(int x, int y) {
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void printToxy(int x, int y, string text) {
+    gotoxy(x, y);
+    cout << text;
+}
+
+
+/*
+void mainMenu() {
+
+
+
+ _______________________________________
++                                       +
+|     I N S E R T   U S B   C A R D     |
++_______________________________________+
+
+___________________
++    |            _|
+|    |  A  T  M  |_
+|____|____________|
+|  | __________ |
+|  | |_U__S__B_| |
+|\_|____________|
+|  |            \
+|  |             +
+|  |             |
+|  +             |
+\  |             |
+ \_|____________ |
+
+
+}*/
