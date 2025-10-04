@@ -1,26 +1,23 @@
 #include <iostream>
 #include <windows.h>
 #include <fstream>
-#include <filesystem> // for checking if file exists in the usb
+#include <filesystem>
 #include <time.h>
 #include <conio.h>
 #define MAX 5
+#define v 120
 
 using namespace std;
 
 struct Date {
-    int day;
-    int month;
-    int year;
+    int day, month, year;
 };
 
 struct AccountInfo {
     int accountNumber;
-    string name;
-    Date birthDate;
-    int contactNumber;
+    string name, contactNumber, pin;
     double balance;
-    int pin;
+    Date birthDate;
 };
 
 struct List {
@@ -30,7 +27,7 @@ struct List {
 
 struct CardInfo {
     int accountNumber;
-    int pin;
+    string pin;
 };
 
 class ATM {
@@ -56,25 +53,18 @@ class ATM {
         void withdraw();
         void transfer();
         void changePin();
+        string getPin();
+        string encrypt(string pin);
+        string decrypt(string pin);
         //void other();
 };
 
 //UI animations;
 void printToxy(int x, int y, string text);
 void gotoxy(int x, int y);
-void mainMenu();
-
-int menu(){
-    int choice;
-    cout << "1. Register Account" << endl;
-    cout << "2. Login" << endl;
-    cout << "3. Exit" << endl;
-    cout << "Enter choice: ";
-    cin >> choice;
-    return choice;
-}
-
-
+void RegMenu();
+int getInt(int x);
+string getStr(int x);
 
 int transactionMenu(){
     int choice;
@@ -95,123 +85,87 @@ int main() {
     atm.retrieve();
     atm.retrieveFromUsb();
     int count = 0;
-    while (true) { //dito
+    while (true) {
+        system("cls");
+        printToxy(30, 4, "     I N S E R T   U S B   C A R D ...  ");
+        printToxy(30, 5, "+_______________________________________+");
+        printToxy(30, 6, "|                                       |");
+        printToxy(30, 7, "|                 - - -                 |");
+        printToxy(30, 8, "+_______________________________________+");
+        printToxy(40, 11, "___________________");
+        printToxy(40, 12, "+    |            _|");
+        printToxy(40, 13, "|    |  A  T  M  |");
+        printToxy(40, 14, "|____|____________|");
+        printToxy(40, 15, "|  | __________ |");
+        printToxy(40, 16, "|  | |_U__S__B_| |");
+        printToxy(40, 17, "|\\_|____________|");
+        printToxy(40, 18, "|  |            \\");
+        printToxy(40, 19, "|  |             +");
+        printToxy(40, 20, "|  |             |");
+        printToxy(40, 21, "|  +             |");
+        printToxy(40, 22, "\\  |             |");
+        printToxy(40, 23, " \\_|____________ |");
         if(!atm.checkUsbDrive()){
-            system("cls");
             if(count == 0) {
                 count++;
-                // hindi ma run sa terminal sa vscode sa cmd ko nirurun
-
-                // g nga, makikita koba dito pag nirun mo?
-                // panong di ma recognize?
-                
-                // kita mo ba? open mo yung read only na terminal i full screen mo wait rurun ko
-            
-                // isa pa boss, register account m
-                // kita mo ba yung nasa terminal send kanga ss mag dedemo ako
-                // na open mo na sa full terminal? sa naka tab
-                // oo boss ala lumabas, isapa run
-                // tinging nga wait boss
-                
-
-            
-
-                printToxy(30, 5, "_________________________________________");
-                printToxy(30, 6, "|                                       |");
-                printToxy(30, 7, "|     I N S E R T   U S B   C A R D     |");
-                printToxy(30, 8, "|_______________________________________|");
-
-                printToxy(40, 12, "___________________");
-                printToxy(40, 13, "+    |            _|");
-                printToxy(40, 14, "|    |  A  T  M  |");
-                printToxy(40, 15, "|____|____________|");
-                printToxy(40, 16, "|  | __________ |");
-                printToxy(40, 17, "|  | |_U__S__B_| |");
-                printToxy(40, 18, "|\\_|____________|");
-                printToxy(40, 19, "|  |            \\");
-                printToxy(40, 20, "|  |             +");
-                printToxy(40, 21, "|  |             |");
-                printToxy(40, 22, "|  +             |");
-                printToxy(40, 23, "\\  |             |");
-                printToxy(40, 24, " \\_|____________ |");
-
-                cout<<"\n\n";
-                system("pause");
+                printToxy(30, 4, "     I N S E R T   U S B   C A R D ..  ");
+               
+                printToxy(40,25, "\n"); system("pause");
             }
             if (count != 0) {
                 count--;
-                printToxy(30, 5, "_________________________________________");
-                printToxy(30, 6, "|                                       |");
-                printToxy(30, 7, "|\033[31m     I N S E R T   U S B   C A R D     \033[0m|");
-                printToxy(30, 8, "|_______________________________________|");
-
-                printToxy(40, 12, "___________________");
-                printToxy(40, 13, "+    |            _|");
-                printToxy(40, 14, "|    |  A  T  M  |");
-                printToxy(40, 15, "|____|____________|");
-                printToxy(40, 16, "|  | __________ |");
-                printToxy(40, 17, "|  | |_U__S__B_| |");
-                printToxy(40, 18, "|\\_|____________|");
-                printToxy(40, 19, "|  |            \\");
-                printToxy(40, 20, "|  |             +");
-                printToxy(40, 21, "|  |             |");
-                printToxy(40, 22, "|  +             |");
-                printToxy(40, 23, "\\  |             |");
-                printToxy(40, 24, " \\_|____________ |");
-
-
-                cout<<"\n\n";
+                printToxy(30, 4, " \033[31m    I N S E R T   U S B   C A R D ...     \033[0m");
+                printToxy(40,23, "\n\n\n");
                 system("pause");
             }
             continue;
         } else {
-            printToxy(30, 27, "[ DO NOT REMOVE USB DRIVE WhILE USING ATM ]");
-            system("pause");
-            system("cls");
-            switch (menu()){
-                case 1:
-                    atm.registerAccount();
-                    break;
-                case 2: 
-                    atm.retrieveFromUsb();
-                    if(atm.authenticate()){
-                        while(true){ //medjo dito
-                            switch(transactionMenu()){
-                                case 1:
-                                    atm.balanceInquiry();
-                                    break;
-                                case 2:
-                                    atm.deposit();
-                                    break;
-                                case 3:
-                                    atm.withdraw();
-                                    break;
-                                case 4:
-                                    atm.transfer();
-                                    break;
-                                case 5:
-                                    atm.changePin();
-                                    break;
-                                case 6:
-                                    cout << "Logging out..." << endl;
-                                    system("pause");
-                                    exit(0);
-                                default:
-                                    cout << "Invalid choice. Please try again." << endl;
-                                    system("pause");
-                            }
+            printToxy(29, 25, "[ \033[33mDO NOT REMOVE USB DRIVE WHILE USING ATM\033[0m ]");
+            if (filesystem::exists(atm.getUsbPath() + string("pin.code.txt"))){
+                printToxy(41, 7, "\033[33mR E G I S T E R E D\033[0m");
+                printToxy(40,23, "\n\n\n"); system("pause"); system("cls");
+                atm.retrieveFromUsb();
+                if(atm.authenticate()){
+                    atm.retrieve();
+                    while(true){ //medjo dito
+                        switch(transactionMenu()){
+                            case 1:
+                                atm.balanceInquiry();
+                                break;
+                            case 2:
+                                atm.deposit();
+                                break;
+                            case 3:
+                                atm.withdraw();
+                                break;
+                            case 4:
+                                atm.transfer();
+                                break;
+                            case 5:
+                                atm.changePin();
+                                atm.saveToUsb();
+                                atm.save();
+                                break;
+                            case 6:
+                                cout << "Logging out..." << endl;
+                                atm.saveToUsb();
+                                atm.save();
+                                system("pause");
+                                exit(0);
+                            default:
+                                cout << "Invalid choice. Please try again." << endl;
+                                system("pause");
                         }
-                    } else {
-                        cout << "Authentication failed. Returning to main menu." << endl;
-                        system("pause");
                     }
-                case 3:
-                    cout << "Exiting program." << endl;
-                    return 0;
-                default:
-                    cout << "Invalid choice. Please try again." << endl;
+                } else {
+                    cout << "Authentication failed. Returning to main menu." << endl;
                     system("pause");
-
+                }
+            } else {
+                printToxy(38, 7, "\033[33mN O T   R E G I S T E R E D\033[0m");
+                printToxy(40,23, "\n\n\n"); system("pause"); system("cls");
+                RegMenu();
+                atm.registerAccount();
             }
         }
     }
@@ -271,6 +225,7 @@ string ATM::getUsbPath() {
 
 void ATM::registerAccount() {
     AccountInfo newAcc;
+    cout<<"\033[33m";
     if (!checkUsbDrive()) {
         cout << "No USB drive detected." << endl;
         system("pause");
@@ -287,42 +242,56 @@ void ATM::registerAccount() {
         system("pause");
         return;
     }
-
-    cout << "Enter Name: ";
-    cin.ignore(); getline(cin, newAcc.name);
-
+    printToxy(37,6,"");
+    getline(cin, newAcc.name);
+    printToxy(38, 21, newAcc.name);
     srand(time(NULL));
     newAcc.accountNumber = rand() % 99999 + 10000;
-    cout << "Generated Account Number: " << newAcc.accountNumber << endl;
-
-    cout << "Enter Birth Date (DD MM YYYY): ";
-    cin >> newAcc.birthDate.day >> newAcc.birthDate.month >> newAcc.birthDate.year;
-    cout << "Enter Contact Number: ";
-    cin >> newAcc.contactNumber;
-    cout << "Enter Initial Deposit: ";
+    printToxy(89, 6,"");
+    cout << newAcc.accountNumber;
+    printToxy(37,9,"");
+    newAcc.birthDate.day = getInt(2);
+    printToxy(42, 9, "");
+    newAcc.birthDate.month = getInt(2);
+    printToxy(47, 9, "");
+    newAcc.birthDate.year = getInt(2);
+    printToxy(94, 9,"");
+    newAcc.contactNumber = getStr(11);
+    printToxy(38,21,"");
+    cout << newAcc.contactNumber;
+    printToxy(37,12,"");
     cin >> newAcc.balance;
-    cout << "Enter PIN: ";
-    cin >> newAcc.pin;
+    printToxy(37,15,"");
+    newAcc.pin = encrypt(getPin());
+    printToxy(37,18,"");
+    if(getPin() != decrypt(newAcc.pin)) {
+        printToxy(38, 21, "PINs do not match. Registration failed.");
+        cout<<"\033[0m";
+        printToxy(40,23, "\n\n\n"); cin.ignore(); system("pause");
+        return;
+    }
 
     if (filesystem::exists(getUsbPath() + string("pin.code.txt"))) {
-        cout << "Failed to register..." << endl;
-        cout << "USB Card already registered..." << endl;
-        system("pause");
+        printToxy(38, 21, "A CCOUNT ALREADY EXIST...");
+        cout<<"\033[0m";
+        printToxy(40,23, "\n\n\n"); cin.ignore(); system("pause");
         return;
     }
 
     if (newAcc.balance < 5000) {
-        cout << "Initial deposit must be at least 5000." << endl;
-        cout << "Failed to register..." << endl;
-        system("pause");
+        printToxy(38, 21, "Initial deposit must be at least 5000.");
+        cout<<"\033[0m";
+        printToxy(40,23, "\n\n\n"); cin.ignore(); system("pause");
         return;
     }
 
     L.accounts[++L.last] = newAcc;
 
-    cout << "Account registered successfully." << endl;
+    printToxy(38, 21, "Account registered successfully.");
+    printToxy(40,23, "\n\n\n"); cin.ignore(); system("pause");
     saveToUsb();
     save();
+    cout<<"\033[0m";
 }
 
 void ATM::saveToUsb() {
@@ -332,7 +301,7 @@ void ATM::saveToUsb() {
         system("pause");
         return;
     }
-    fout << L.accounts[L.last].accountNumber << "\t" << L.accounts[L.last].pin << endl;
+    fout << L.accounts[L.last].accountNumber << "\t" << encrypt(L.accounts[L.last].pin) << endl;
     fout.close();
 }
 
@@ -360,12 +329,9 @@ void ATM::save() {
 
 void ATM::retrieve() {
     ifstream fin("database.txt");
-    if (!fin) {
-        cout << "Error opening database file." << endl;
-        system("pause");
-        return;
-    }
+    if (!fin) return;
     AccountInfo acc;
+    L.last = -1;
     while (fin >> acc.accountNumber) {
         fin.ignore(); getline(fin, acc.name, '\t');
         char slash;
@@ -378,11 +344,7 @@ void ATM::retrieve() {
 
 void ATM::retrieveFromUsb() {
     ifstream fin(getUsbPath() + string("pin.code.txt"));
-    if (!fin) {
-        cout << "Error opening file on USB drive." << endl;
-        system("pause");
-        return;
-    }
+    if (!fin) return;
     fin >> card.accountNumber >> card.pin;
     fin.close();
     cout << "Retrieved from USB - Account Number: " << card.accountNumber << ", PIN: " << card.pin << endl;
@@ -390,12 +352,13 @@ void ATM::retrieveFromUsb() {
 
 bool ATM::authenticate() {
     int attempts = 3;
-    int tempPin;
+    int p = locate(card.accountNumber);
+    string tempPin;
     for (int i=0; i<attempts; i++) {
         cout << "ACCOUTN NUM: "<< card.accountNumber << endl;
         cout << "Enter PIN: ";
-        cin >> tempPin;
-        if (tempPin == card.pin) {
+        tempPin = getPin();
+        if (tempPin == decrypt(L.accounts[p].pin)) {
             cout << "Authentication successful." << endl;
             return true;
         } else {
@@ -422,6 +385,8 @@ void ATM::deposit() {
     if (p!= -1) {
         L.accounts[p].balance += amount;
         cout << "Deposit successful. New balance: " << L.accounts[p].balance << endl;
+        saveToUsb();
+        save();
         system("pause");
     } else {
         cout << "Error processing deposit." << endl;
@@ -478,17 +443,15 @@ void ATM::transfer() {
 
 void ATM::changePin() {
     int p = locate(card.accountNumber);
-    int newPin, oldPin, confirmPin;
+    string newPin, oldPin, confirmPin;
     cout << "Enter old PIN: ";
-    cin >> oldPin;
-    if (oldPin == L.accounts[p].pin) {
-        cout << "Enter new PIN: "; cin >> newPin;
-        cout << "Confirm new PIN: "; cin >> confirmPin;
+    oldPin = getPin();
+    if (oldPin == decrypt(L.accounts[p].pin)) {
+        cout << "Enter new PIN: "; newPin = getPin();
+        cout << "Confirm new PIN: "; confirmPin = getPin();
         if(newPin == confirmPin) {
-            L.accounts[p].pin = newPin;
-            card.pin = newPin;
-            saveToUsb();
-            save();
+            L.accounts[p].pin = encrypt(newPin);
+            card.pin = encrypt(newPin);
         } else {
             cout << "PINs do not match. Please try again." << endl;
             system("pause");
@@ -498,6 +461,86 @@ void ATM::changePin() {
         system("pause");
     }
 }
+
+string ATM::getPin() {
+    string pincode;
+    int ctr = 0;
+    char ch;
+    while ((ch = _getch()) != '\r' && ctr < 6) {
+        if (ch >= '0' && ch <= '9') {
+            pincode += ch;
+            ctr++;
+            cout << '*';
+        } else if (ch == '\b') {
+            if (!pincode.empty()) {
+                cout << "\b \b";
+                ctr--;
+                pincode.pop_back();
+            }
+        } else {
+        }
+    }
+    cout << endl;
+    return pincode;
+}
+
+string ATM::encrypt(string pin){
+    for(int i=0; i<pin.size(); i++){
+        pin[i]=pin[i]+v;
+    }
+    return pin;
+}
+
+string ATM::decrypt(string pin){
+    for(int i=0; i<pin.size(); i++){
+        pin[i]=pin[i]-v;
+    }
+    return pin;
+}
+
+int getInt(int x) {
+    int ctr = 0;
+    int num = 0; 
+    char ch;
+    while (ctr < x) {
+        ch = _getch();
+        if (ch >= '0' && ch <= '9') {
+            num = num * 10 + (ch - '0');
+            cout << ch; 
+            ctr++;
+        } else if (ch == '\b') {
+            if (num > 0) {
+                cout << "\b \b";
+                num /= 10;
+                ctr--;
+            }
+        }
+    } return num;
+}
+
+string getStr(int x){
+    int ctr = 0;
+    string num;
+    char ch;
+    while ((ch = _getch()) != '\r' && ctr < x) {
+        if (ch >= '0' && ch <= '9') {
+            num += ch;
+            ctr++;
+            cout << ch;
+        } else if (ch == '\b') {
+            if (!num.empty()) {
+                cout << "\b \b";
+                ctr--;
+                num.pop_back();
+            }
+        } else {
+        }
+    }
+    cout << endl;
+ 
+    return num;
+}
+
 
 // UI here
 void gotoxy(int x, int y) {
@@ -513,29 +556,27 @@ void printToxy(int x, int y, string text) {
 }
 
 
-/*
-void mainMenu() {
-
-
-
- _______________________________________
-+                                       +
-|     I N S E R T   U S B   C A R D     |
-+_______________________________________+
-
-___________________
-+    |            _|
-|    |  A  T  M  |_
-|____|____________|
-|  | __________ |
-|  | |_U__S__B_| |
-|\_|____________|
-|  |            \
-|  |             +
-|  |             |
-|  +             |
-\  |             |
- \_|____________ |
-
-
-}*/
+void RegMenu(){
+    printToxy(12, 1,  "________________________________________________________________________________________________");
+    printToxy(12, 2,  "|                                                                                              |");
+    printToxy(12, 3,  "|                               R  E  G  I  S  T  R  A  T  I  O  N                             |");
+    printToxy(12, 4,  "|______________________________________________________________________________________________|");
+    printToxy(12, 5,  "|                     |                             |                     |                    |");
+    printToxy(12, 6,  "|  Account Name       |                             |  Account Number     |                    |");
+    printToxy(12, 7,  "|_____________________|_____________________________|_____________________|____________________|");
+    printToxy(12, 8,  "|                     |                             |                     |                    |");
+    printToxy(12, 9,  "|  Birthday           |  -- / -- / --               |  Contact Number     |  +63               |");
+    printToxy(12, 10, "|_____________________|_____________________________|_____________________|____________________|");
+    printToxy(12, 11, "|                     |                                                                        |");
+    printToxy(12, 12, "|  Initial Deposit    |                                                                        |");
+    printToxy(12, 13, "|_____________________|________________________________________________________________________|");
+    printToxy(12, 14, "|                     |                                                                        |");
+    printToxy(12, 15, "|  Enter PIN Code     |                                                                        |");
+    printToxy(12, 16, "|_____________________|________________________________________________________________________|");
+    printToxy(12, 17, "|                     |                                                                        |");
+    printToxy(12, 18, "|  Confirm PIN Code   |                                                                        |");
+    printToxy(12, 19, "|_____________________|________________________________________________________________________|");
+    printToxy(12, 20, "|                                                                                              |");
+    printToxy(12, 21, "|                                         --- --- ---                                          |");
+    printToxy(12, 22, "|______________________________________________________________________________________________|");
+}
