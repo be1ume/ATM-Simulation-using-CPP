@@ -1,10 +1,10 @@
 #include <iostream>
-#include <windows.h>
-#include <fstream>
-#include <filesystem> //for filesystem::exist() 
-#include <time.h>
-#include <conio.h> //for _getch()
-#define MAX 5
+#include <windows.h>    // for moving within the filesystem, for USB
+#include <fstream>      // for saving data
+#include <filesystem>   //for filesystem::exist()
+#include <time.h>       // for srand
+#include <conio.h>      //for _getch(), pop_back and getch()
+#define MAX 3
 #define v 120
 
 using namespace std;
@@ -59,7 +59,7 @@ class ATM {
         AccountInfo nameIdGetter();
 };
 
-//UI animations;
+//UI and animation;
 void printToxy(int x, int y, string text);
 void gotoxy(int x, int y);
 void RegMenu();
@@ -76,7 +76,7 @@ int main() {
     int count = 0;
     while (true) {
         system("cls");
-        printToxy(30, 4, "     I N S E R T   U S B   C A R D ...  ");
+        printToxy(35, 4, "I N S E R T   U S B   C A R D ...");
         printToxy(30, 5, "+_______________________________________+");
         printToxy(30, 6, "|                                       |");
         printToxy(30, 7, "|                 - - -                 |");
@@ -97,18 +97,17 @@ int main() {
         if(!atm.checkUsbDrive()){
             if(count == 0) {
                 count++;
-                printToxy(30, 4, "     I N S E R T   U S B   C A R D ..  ");
+                printToxy(35, 4, "I N S E R T   U S B   C A R D .. ");
                 printToxy(40,25, "\n"); system("pause");
             }
             if (count != 0) {
                 count--;
-                printToxy(30, 4, " \033[31m    I N S E R T   U S B   C A R D ...     \033[0m");
+                printToxy(34, 4, " \033[31mI N S E R T   U S B   C A R D ...\033[0m");
                 printToxy(40,23, "\n\n\n");
                 system("pause");
             }
             continue;
         } else {
-            printToxy(29, 25, "[ \033[33mDO NOT REMOVE USB DRIVE WHILE USING ATM\033[0m ]");
             if (filesystem::exists(atm.getUsbPath() + string("pin.code.txt"))){
                 printToxy(41, 7, "\033[33mR E G I S T E R E D\033[0m");
                 printToxy(40,23, "\n\n\n"); system("pause"); system("cls");
@@ -117,11 +116,11 @@ int main() {
                 printToxy(30, 6, "|                                       |");
                 printToxy(30, 7, "|                 - - -                 |");
                 printToxy(30, 8, "+_______________________________________+");
-                printToxy(30, 4, "       A U T H E N T I C A T I O N     ");
+                printToxy(37, 4, "A U T H E N T I C A T I O N");
                 printToxy(41, 7, "\033[33mR E G I S T E R E D\033[0m");
                 if(atm.authenticate()){
                     atm.retrieve();
-                    while(true){ 
+                    while(true){
                         switch(tranMenu(atm.nameIdGetter())){
                             case 1:
                                 printToxy(53,22, "           ");
@@ -162,12 +161,12 @@ int main() {
                         }
                     }
                 } else {
-                    printToxy(35,17,"\033[031m     E X I T I N G . . .           ");
+                    printToxy(35,17,"\033[031m        E X I T I N G . . .           ");
                     printToxy(40,25, "\033[0m\n"); system("pause");
                     exit(0);
                 }
             } else {
-                printToxy(38, 7, "\033[33mN O T   R E G I S T E R E D\033[0m");
+                printToxy(37, 7, "\033[33mN O T   R E G I S T E R E D\033[0m");
                 printToxy(40,23, "\n\n\n"); system("pause"); system("cls");
                 RegMenu();
                 atm.registerAccount();
@@ -232,18 +231,18 @@ void ATM::registerAccount() {
     AccountInfo newAcc;
     cout<<"\033[33m";
     if (!checkUsbDrive()) {
-        printToxy(38, 21, "\033[31N O   U S B   D E T E C T E D ");
+        printToxy(34, 21, "\033[31mN O   U S B   D E T E C T E D\033[0m");
         printToxy(40,25, "\033[0m\n"); system("pause");
         return;
     }
     if (isFull()) {
-        printToxy(30, 21, "\033[31mD A T A B A S E   E X C E E D E D   M A X   C A P A C I T Y\033[0m");
+        printToxy(32, 21, "\033[31mD A T A B A S E  E X C E E D E D  M A X  C A P A C I T Y\033[0m");
         printToxy(40,25, "\033[0m\n"); system("pause");
         return;
     }
 
     if (isDuplicate(newAcc.accountNumber)) {
-        printToxy(38, 21, "\033[31A C C O U N T   A L R E A D Y   E X I S T");
+        printToxy(28, 21, "\033[31mA C C O U N T   A L R E A D Y   E X I S T\033[0m");
         printToxy(40,25, "\033[0m\n"); system("pause");
         return;
     }
@@ -267,29 +266,20 @@ void ATM::registerAccount() {
     newAcc.pin = encrypt(getPin());
     printToxy(37,18,"");
     if(getPin() != decrypt(newAcc.pin)) {
-        printToxy(38, 21, "\033[31mP I N ' s   D I D   N O T   M A T C H \033[0m");
+        printToxy(44, 21, "\033[31mP I N   D I D   N O T   M A T C H\033[0m");
         cout<<"\033[0m";
         printToxy(40,25, "\033[0m\n"); cin.ignore(); system("pause");
         return;
     }
-
-    if (filesystem::exists(getUsbPath() + string("pin.code.txt"))) {
-        printToxy(38, 21, "\033[31mA C C O U N T   A L R E A D Y   E X I S T . . .");
-        cout<<"\033[0m";
-        printToxy(40,25, "\033[0m\n"); cin.ignore(); system("pause");
-        return;
-    }
-
     if (newAcc.balance < 5000) {
-        printToxy(29, 21, "\033[31mI N T I A L   D E P O S I T   M U S T   A T L E A S T   5 0 0 0 ");
+        printToxy(29, 21, "\033[31mI N T I A L  D E P O S I T  M U S T  A T L E A S T  5 0 0 0");
         cout<<"\033[0m";
         printToxy(40,25, "\033[0m\n"); cin.ignore(); system("pause");
         return;
     }
 
     L.accounts[++L.last] = newAcc;
-
-    printToxy(28, 21, "R  E  G  I  S  T  E  R  E  D     S  U  C  C  E  S  S  F  U  L  L  Y");
+    printToxy(26, 21, "\033[33mR  E  G  I  S  T  E  R  E  D     S  U  C  C  E  S  S  F  U  L  L  Y\033[0m");
     printToxy(40,25, "\033[0m\n"); cin.ignore(); system("pause");
     saveToUsb();
     save();
@@ -305,19 +295,19 @@ bool ATM::authenticate() {
         printToxy(43, 13, "\033[33m");
         tempPin = getPin();
         if (tempPin == decrypt(L.accounts[p].pin)) {
-            printToxy(38, 17, "C O R R E C T   P I N");
+            printToxy(40, 17, "C O R R E C T   P I N");
             printToxy(40,25, "\n"); system("pause");
             cout<<"\033[0m";
             return true;
         } else {
-            gotoxy(35,17);
+            gotoxy(34,17);
             cout<<"I N C O R R E C T   P I N  ( "<<i-1<<" )";
             printToxy(40,25, "\n"); system("pause");
         } cout<<"\033[0m";
     }  return false;
 }
 
-void ATM::balanceInquiry() { 
+void ATM::balanceInquiry() {
     int p = locate(card.accountNumber);
     if (p != -1) {
         gotoxy(15,19);
@@ -333,13 +323,13 @@ void ATM::balanceInquiry() {
 
 void ATM::deposit() {
     int p = locate(card.accountNumber);
+    printToxy(41, 22, "\033[33mE  N  T  E  R     A   M  M  O  U  N  T\033[0m");
     gotoxy(15,19);
     cout << "\033[33mEnter Amount To Deposit: Php ";
     double amount; cin >> amount;
-    printToxy(38,22, "E  N  T  E  R     A   M  M  O  U  N  T ");
     if (p!= -1) {
         L.accounts[p].balance += amount;
-        printToxy(28,22, "D  E  P  O  S  I  T  E  D     S  U  C  C  E  S  S  F  U  L  L  Y");
+        printToxy(28, 22, "\033[33mD  E  P  O  S  I  T  E  D     S  U  C  C  E  S  S  F  U  L  L  Y\033[0m");
         saveToUsb(); save();
         cout<<"\033[0m";
         printToxy(40,25, "\n"); system("pause");
@@ -352,20 +342,20 @@ void ATM::deposit() {
 
 void ATM::withdraw() {
     int p = locate(card.accountNumber);
+    printToxy(41, 22, "\033[33mE  N  T  E  R     A   M  M  O  U  N  T\033[0m");
     gotoxy(15,19);
     cout << "\033[33mEnter Amount To Withdraw: Php ";
     double amount; cin >> amount;
-    printToxy(38,22, "E  N  T  E  R     A   M  M  O  U  N  T ");
     if (p!= -1){
         if (amount < L.accounts[p].balance){
             L.accounts[p].balance -= amount;
-            printToxy(28,22, "W  I  T  H  D  R  A  W  N     S  U  C  C  E  S  S  F  U  L  L  Y");
+            printToxy(28,22, "\033[33mW  I  T  H  D  R  A  W  N     S  U  C  C  E  S  S  F  U  L  L  Y\033[0m");
             saveToUsb(); save();
             cout<<"\033[0m";
             printToxy(40,25, "\n"); system("pause");
         }
         else {
-            printToxy(38,22, "\033[31m I N S U F I C I E N T   B A L A N C E\033[0m");
+            printToxy(41,22, "\033[31mI N S U F I C I E N T   B A L A N C E  \033[0m");
             printToxy(40,25, "\n"); system("pause");
         }
     }
@@ -374,34 +364,34 @@ void ATM::withdraw() {
 void ATM::transfer() {
     int p = locate(card.accountNumber);
     int target;
-    printToxy(40,22, "E N T E R   A C C O U N T   N O . ");
+    printToxy(43,22, "\033[33mE N T E R   A C C O U N T   N O . \033[0m");
     gotoxy(15,19);
     cout << "\033[33mEnter Account Number for Transfer: ";
     cin >> target;
     int t = locate(target);
     if (t == -1) {
-        printToxy(40,22, "\033[31mA C C O U N T   D O E S   N O T   E X I S T\033[0m");
+        printToxy(38,22, "\033[31mA C C O U N T   D O E S   N O T   E X I S T\033[0m");
         printToxy(40,25, "\n"); system("pause");
         return;
     } else if (t == p){
-        printToxy(31,22, "\033[31mC A N N O T   T R A N S F E R   T O   S E L F\033[0m");
+        printToxy(37,22, "\033[31mC A N N O T   T R A N S F E R   T O   S E L F\033[0m");
         printToxy(40,25, "\n"); system("pause");
         return;
     } else {
-        printToxy(38,22, "\033[33mE  N  T  E  R     A   M  M  O  U  N  T ");
+        printToxy(40,22, "\033[33mE  N  T  E  R     A   M  M  O  U  N  T ");
         gotoxy(15,19);
         cout << "\033[33mEnter Amount To Transfer: Php              ";
         gotoxy(45,19);
         double amount; cin >> amount;
-       
+
         if (amount < L.accounts[p].balance){
             L.accounts[p].balance -= amount;
             L.accounts[t].balance += amount;
-            printToxy(28,22, "T  R  A  N  S  F  E  R  E  D     S  U  C  C  E  S  S  F  U  L  L  Y");
+            printToxy(26,22, "T  R  A  N  S  F  E  R  E  D     S  U  C  C  E  S  S  F  U  L  L  Y");
             save();
             printToxy(40,25, "\033[0m\n"); system("pause");
         } else {
-            printToxy(38,22, "\033[31m I N S U F I C I E N T   B A L A N C E\033[0m");
+            printToxy(40,22, "\033[31m I N S U F I C I E N T   B A L A N C E\033[0m");
             printToxy(40,25, "\033[0m\n"); system("pause");
         }
     }
@@ -410,30 +400,30 @@ void ATM::transfer() {
 void ATM::changePin() {
     int p = locate(card.accountNumber);
     string newPin, oldPin, confirmPin;
-    printToxy(40,22, "\033[33mE  N  T  E  R    O  L  D    P  I  N ");
+    printToxy(42,22, "\033[33mE  N  T  E  R    O  L  D    P  I  N");
     gotoxy(15,19);
     cout << "\033[33mEnter Old Pin: ";
     oldPin = getPin();
     if (oldPin == decrypt(L.accounts[p].pin)) {
-        printToxy(40,22, "\033[33mE  N  T  E  R    N  E  W    P  I  N  ");
+        printToxy(41,22, "\033[33mE  N  T  E  R    N  E  W    P  I  N  ");
         gotoxy(15,19);
         cout << "Enter new PIN:             ";
         gotoxy(30, 19); newPin = getPin();
-        printToxy(40,22, "C  O  N  F  I  R  M    N  E  W    P  I  N  ");
+        printToxy(38,22, "C  O  N  F  I  R  M    N  E  W    P  I  N  ");
         gotoxy(15,19);
-        cout << "Confirm new PIN:             "; 
+        cout << "Confirm new PIN:             ";
         gotoxy(32, 19);confirmPin = getPin();
         if(newPin == confirmPin) {
             L.accounts[p].pin = encrypt(newPin);
             card.pin = encrypt(newPin);
-            printToxy(35,22, "P I N   C H A N G E D   S U C C E S S F U L L Y ");
+            printToxy(36,22, "P I N   C H A N G E D   S U C C E S S F U L L Y ");
             printToxy(40,25, "\033[0m\n"); system("pause");
         } else {
             printToxy(35,22, "\033[31mP  I  N    D  O  E  S    N  O  T    M  A  T  C  H");
             printToxy(40,25, "\033[0m\n"); system("pause");
         }
     } else {
-        printToxy(40,22, "\033[31m I  N  C  O  R  R  E  C  T    P  I  N");
+        printToxy(42,22, "\033[31mI  N  C  O  R  R  E  C  T    P  I  N");
         printToxy(40,25, "\033[0m\n"); system("pause");
     }
 }
@@ -442,18 +432,29 @@ string ATM::getPin() {
     string pincode;
     int ctr = 0;
     char ch;
-    while ((ch = _getch()) != '\r' && ctr < 6) {
-        if (ch >= '0' && ch <= '9') {
-            pincode += ch;
-            ctr++;
-            cout << '*';
-        } else if (ch == '\b') {
-            if (!pincode.empty()) {
+    while(1){
+        ch = _getch();
+        if(ch == '\r'){
+            if(ctr==4) break;
+            else continue;
+        }
+        else if(ch >= '0' && ch <='9'){
+            if(ctr<6){
+                pincode += ch;
+                cout << '*';
+                ctr++;
+                if(ctr==6){
+                    cout<<endl;
+                    break;
+                }
+            }
+        }
+        else if(ch == '\b'){
+            if(!pincode.empty()){
                 cout << "\b \b";
                 ctr--;
                 pincode.pop_back();
             }
-        } else {
         }
     }
     cout << endl;
@@ -476,22 +477,14 @@ string ATM::decrypt(string pin){
 
 void ATM::saveToUsb() {
     ofstream fout(getUsbPath() + string("pin.code.txt"));
-    if (!fout) {
-        cout << "Error creating file on USB drive." << endl;
-        system("pause");
-        return;
-    }
+    if (!fout) return;
     fout << L.accounts[L.last].accountNumber << "\t" << encrypt(L.accounts[L.last].pin) << endl;
     fout.close();
 }
 
 void ATM::save() {
     ofstream fout("database.txt");
-    if (!fout) {
-        cout << "Error creating database file." << endl;
-        system("pause");
-        return;
-    }
+    if (!fout) return;
     for (int i = 0; i <= L.last; i++) {
         fout << L.accounts[i].accountNumber << "\t"
             << L.accounts[i].name << "\t"
@@ -529,13 +522,13 @@ void ATM::retrieveFromUsb() {
 
 int getInt(int x) {
     int ctr = 0;
-    int num = 0; 
+    int num = 0;
     char ch;
     while (ctr < x) {
-        ch = _getch();
+        ch = getch();
         if (ch >= '0' && ch <= '9') {
             num = num * 10 + (ch - '0');
-            cout << ch; 
+            cout << ch;
             ctr++;
         } else if (ch == '\b') {
             if (num > 0) {
@@ -566,7 +559,7 @@ string getStr(int x){
         }
     }
     cout << endl;
- 
+
     return num;
 }
 
@@ -594,7 +587,7 @@ void RegMenu(){
     printToxy(12, 6,  "|  Account Name:      |                             |  Account Number:    |                    |");
     printToxy(12, 7,  "|_____________________|_____________________________|_____________________|____________________|");
     printToxy(12, 8,  "|                     |                             |                     |                    |");
-    printToxy(12, 9,  "|  Birthday:          |  -- / -- / --               |  Contact Number:    |  +63               |");
+    printToxy(12, 9,  "|  Birthday:          |  mm / dd / yy               |  Contact Number:    |  +63               |");
     printToxy(12, 10, "|_____________________|_____________________________|_____________________|____________________|");
     printToxy(12, 11, "|                     |                                                                        |");
     printToxy(12, 12, "|  Initial Deposit:   |                                                                        |");
