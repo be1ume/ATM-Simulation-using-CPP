@@ -4,7 +4,7 @@
 #include <filesystem>   //for filesystem::exist()
 #include <time.h>       // for srand
 #include <conio.h>      //for _getch(), pop_back and getch()
-#define MAX 3
+#define MAX 5
 #define v 120
 
 using namespace std;
@@ -240,16 +240,15 @@ void ATM::registerAccount() {
         printToxy(40,25, "\033[0m\n"); system("pause");
         return;
     }
-
+    printToxy(37,6,"");
+    getline(cin, newAcc.name);
+    srand(time(NULL));
+    newAcc.accountNumber = rand() % 99999 + 10000;
     if (isDuplicate(newAcc.accountNumber)) {
         printToxy(28, 21, "\033[31mA C C O U N T   A L R E A D Y   E X I S T\033[0m");
         printToxy(40,25, "\033[0m\n"); system("pause");
         return;
     }
-    printToxy(37,6,"");
-    getline(cin, newAcc.name);
-    srand(time(NULL));
-    newAcc.accountNumber = rand() % 99999 + 10000;
     printToxy(89, 6,"");
     cout << newAcc.accountNumber;
     printToxy(37,9,"");
@@ -294,7 +293,7 @@ bool ATM::authenticate() {
         AuthMenu();
         printToxy(43, 13, "\033[33m");
         tempPin = getPin();
-        if (tempPin == decrypt(L.accounts[p].pin)) {
+        if (tempPin == decrypt(L.accounts[p].pin) && tempPin == decrypt(card.pin)) {
             printToxy(40, 17, "C O R R E C T   P I N");
             printToxy(40,25, "\n"); system("pause");
             cout<<"\033[0m";
@@ -478,7 +477,7 @@ string ATM::decrypt(string pin){
 void ATM::saveToUsb() {
     ofstream fout(getUsbPath() + string("pin.code.txt"));
     if (!fout) return;
-    fout << L.accounts[L.last].accountNumber << "\t" << encrypt(L.accounts[L.last].pin) << endl;
+    fout << L.accounts[L.last].accountNumber << "\t" << L.accounts[L.last].pin << endl;
     fout.close();
 }
 
